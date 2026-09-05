@@ -1,3 +1,3 @@
-# Bayesian hot spot analysis of early-onset cancers
+# Bayesian hot spot analysis of early cancer death in the United States
 
-Code to perform analyses + produce figures
+Code and data to perform analyses + produce figures
