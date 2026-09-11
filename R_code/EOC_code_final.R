@@ -26,7 +26,7 @@ cou <- get_acs(year=2010, geography="county", state=us, survey="acs5",
                variables="B01001_001", geometry=TRUE)
 cou$st <- substr(cou$GEOID, start=1, stop=2)
 cou <- cou[which(cou$st != "78" & cou$st != "72" &
-                 cou$st != "02" & cou$st != "15"), ]
+                   cou$st != "02" & cou$st != "15"), ]
 cou <- st_transform(cou, crs=3857)
 cou$one <- 1
 
@@ -36,7 +36,7 @@ st <- get_acs(year=2014, geography="state", variables="B01001_001", geometry=TRU
 st <- st_transform(st, crs=3857)
 st$st <- substr(st$GEOID, start=1, stop=2)
 st <- st[which(st$st != "72" & st$st != "78" &
-               st$st != "15" & st$st != "02"), ]
+                 st$st != "15" & st$st != "02"), ]
 st$one <- 1
 
 
@@ -76,12 +76,6 @@ missing_o <- setdiff(variables_o, names(rs_o_sf4))
 
 if (length(missing_y) > 0) stop("Missing early cancer death variables: ", paste(missing_y, collapse=", "))
 if (length(missing_o) > 0) stop("Missing older cancer death variables: ", paste(missing_o, collapse=", "))
-
-rs_y_sf4 <- rs_y_sf4 %>%
-  filter(if_all(all_of(variables_y), ~ !is.na(.x)), expected > 0)
-
-rs_o_sf4 <- rs_o_sf4 %>%
-  filter(if_all(all_of(variables_o), ~ !is.na(.x)), expected > 0)
 
 
 #creating neighborhoods
@@ -297,7 +291,7 @@ psup_RR_ao <- tm_shape(cou) +
 psup_RR_ao
 
 
-#exceedance probability plots for RR greater than 1.5
+#exceedance probability plots for RR>1.5
 #early cancer death
 plot(rs_y_sf4["exc"], border=NA, main=NA, key.pos=1,
      pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
@@ -360,7 +354,7 @@ if (cancer_site == "allsite") {
     ~1 - inla.pmarginal(log(2.25), .x)
   )
 
-  #all site early cancer death at RR greater than 1
+  #all site early cancer death at RR>1
   plot(rs_y_sf4["exc100"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", main=NA,
@@ -371,7 +365,7 @@ if (cancer_site == "allsite") {
   mtext("All site early cancer death: RR > 1", side=1)
   p_threshold_100 <- recordPlot()
 
-  #all site early cancer death at RR greater than 1.75
+  #all site early cancer death at RR>1.75
   plot(rs_y_sf4["exc175"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", main=NA,
@@ -382,7 +376,7 @@ if (cancer_site == "allsite") {
   mtext("All site early cancer death: RR > 1.75", side=1)
   p_threshold_175 <- recordPlot()
 
-  #all site early cancer death at RR greater than 2
+  #all site early cancer death at RR>2
   plot(rs_y_sf4["exc200"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", main=NA,
@@ -393,7 +387,7 @@ if (cancer_site == "allsite") {
   mtext("All site early cancer death: RR > 2", side=1)
   p_threshold_200 <- recordPlot()
 
-  #all site early cancer death at RR greater than 2.25
+  #all site early cancer death at RR>2.25
   plot(rs_y_sf4["exc225"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", main=NA,
@@ -548,40 +542,28 @@ if (cancer_site == "allsite") {
     full_join(demographic_2020, by="GEOID") %>%
     full_join(insurance_2020, by="GEOID")
 
-  #replace primary ACS covariates while retaining outcomes and fixed covariates
+  #replace primary ACS covariates, retaining outcomes and fixed covariates
   rs_y_2016 <- rs_y_sf4 %>%
     select(-any_of(c("ADI", "b0049_pct", "h0049_pct",
                      "unins_pct0054", "pct_fem", "idarea"))) %>%
-    left_join(covariates_2016, by="GEOID") %>%
-    drop_na(observed, expected, ADI, black_pct, hispanic_pct, ob_cdc,
-            sm_mean, al_mean, unins_pct, pct_fem, LONGITUDE, LATITUDE) %>%
-    filter(expected > 0)
+    left_join(covariates_2016, by="GEOID")
 
   rs_o_2016 <- rs_o_sf4 %>%
     select(-any_of(c("ADI", "b50_pct", "h50_pct",
                      "unins_pct55", "pct_fem", "idarea"))) %>%
-    left_join(covariates_2016, by="GEOID") %>%
-    drop_na(observed, expected, ADI, black_pct, hispanic_pct, ob_cdc,
-            sm_mean, al_mean, unins_pct, pct_fem, LONGITUDE, LATITUDE) %>%
-    filter(expected > 0)
+    left_join(covariates_2016, by="GEOID")
 
   rs_y_2020 <- rs_y_sf4 %>%
     select(-any_of(c("ADI", "b0049_pct", "h0049_pct",
                      "unins_pct0054", "pct_fem", "idarea"))) %>%
-    left_join(covariates_2020, by="GEOID") %>%
-    drop_na(observed, expected, ADI, black_pct, hispanic_pct, ob_cdc,
-            sm_mean, al_mean, unins_pct, pct_fem, LONGITUDE, LATITUDE) %>%
-    filter(expected > 0)
+    left_join(covariates_2020, by="GEOID")
 
   rs_o_2020 <- rs_o_sf4 %>%
     select(-any_of(c("ADI", "b50_pct", "h50_pct",
                      "unins_pct55", "pct_fem", "idarea"))) %>%
-    left_join(covariates_2020, by="GEOID") %>%
-    drop_na(observed, expected, ADI, black_pct, hispanic_pct, ob_cdc,
-            sm_mean, al_mean, unins_pct, pct_fem, LONGITUDE, LATITUDE) %>%
-    filter(expected > 0)
+    left_join(covariates_2020, by="GEOID")
 
-  #2012-2016 neighborhood for early cancer death
+  #2012-2016 for early cancer death
   points_y_2016 <- st_drop_geometry(rs_y_2016)
   points_y_2016 <- st_as_sf(points_y_2016,
                             coords=c("LONGITUDE", "LATITUDE"), crs=4326)
@@ -591,7 +573,7 @@ if (cancer_site == "allsite") {
   gr_y_2016 <- inla.read.graph("map_allsite_2016_early.adj")
   rs_y_2016$idarea <- seq_len(nrow(rs_y_2016))
 
-  #2012-2016 neighborhood for older cancer death
+  #2012-2016 for older cancer death
   points_o_2016 <- st_drop_geometry(rs_o_2016)
   points_o_2016 <- st_as_sf(points_o_2016,
                             coords=c("LONGITUDE", "LATITUDE"), crs=4326)
@@ -601,7 +583,7 @@ if (cancer_site == "allsite") {
   gr_o_2016 <- inla.read.graph("map_allsite_2016_older.adj")
   rs_o_2016$idarea <- seq_len(nrow(rs_o_2016))
 
-  #2016-2020 neighborhood for early cancer death
+  #2016-2020 for early cancer death
   points_y_2020 <- st_drop_geometry(rs_y_2020)
   points_y_2020 <- st_as_sf(points_y_2020,
                             coords=c("LONGITUDE", "LATITUDE"), crs=4326)
@@ -611,7 +593,7 @@ if (cancer_site == "allsite") {
   gr_y_2020 <- inla.read.graph("map_allsite_2020_early.adj")
   rs_y_2020$idarea <- seq_len(nrow(rs_y_2020))
 
-  #2016-2020 neighborhood for older cancer death
+  #2016-2020 for older cancer death
   points_o_2020 <- st_drop_geometry(rs_o_2020)
   points_o_2020 <- st_as_sf(points_o_2020,
                             coords=c("LONGITUDE", "LATITUDE"), crs=4326)
@@ -696,7 +678,7 @@ if (cancer_site == "allsite") {
   rs_y_2020 <- st_transform(rs_y_2020, crs=3857)
   rs_o_2020 <- st_transform(rs_o_2020, crs=3857)
 
-  #2012-2016 early cancer death at RR greater than 1.25
+  #2012-2016 early cancer death at RR>1.25
   plot(rs_y_2016["exc125"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", key.pos=NA,
@@ -706,7 +688,7 @@ if (cancer_site == "allsite") {
   plot(st["one"], border="white", col=sf.colors(1, alpha=0), add=TRUE)
   p_y_2016_125 <- recordPlot()
 
-  #2012-2016 early cancer death at RR greater than 1.5
+  #2012-2016 early cancer death at RR>1.5
   plot(rs_y_2016["exc150"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", key.pos=NA,
@@ -716,7 +698,7 @@ if (cancer_site == "allsite") {
   plot(st["one"], border="white", col=sf.colors(1, alpha=0), add=TRUE)
   p_y_2016_150 <- recordPlot()
 
-  #2016-2020 early cancer death at RR greater than 1.25
+  #2016-2020 early cancer death at RR>1.25
   plot(rs_y_2020["exc125"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", key.pos=NA,
@@ -726,7 +708,7 @@ if (cancer_site == "allsite") {
   plot(st["one"], border="white", col=sf.colors(1, alpha=0), add=TRUE)
   p_y_2020_125 <- recordPlot()
 
-  #2016-2020 early cancer death at RR greater than 1.5
+  #2016-2020 early cancer death at RR>1.5
   plot(rs_y_2020["exc150"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", key.pos=NA,
@@ -740,7 +722,7 @@ if (cancer_site == "allsite") {
   plot_grid(p_y_2016_125, p_y_2016_150, p_y_2020_125, p_y_2020_150,
             nrow=2, labels=c("A", "B", "C", "D"))
 
-  #2012-2016 older cancer death at RR greater than 1.25
+  #2012-2016 older cancer death at RR>1.25
   plot(rs_o_2016["exc125"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", key.pos=NA,
@@ -750,7 +732,7 @@ if (cancer_site == "allsite") {
   plot(st["one"], border="white", col=sf.colors(1, alpha=0), add=TRUE)
   p_o_2016_125 <- recordPlot()
 
-  #2012-2016 older cancer death at RR greater than 1.5
+  #2012-2016 older cancer death at RR>1.5
   plot(rs_o_2016["exc150"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", key.pos=NA,
@@ -760,7 +742,7 @@ if (cancer_site == "allsite") {
   plot(st["one"], border="white", col=sf.colors(1, alpha=0), add=TRUE)
   p_o_2016_150 <- recordPlot()
 
-  #2016-2020 older cancer death at RR greater than 1.25
+  #2016-2020 older cancer death at RR>1.25
   plot(rs_o_2020["exc125"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", key.pos=NA,
@@ -770,7 +752,7 @@ if (cancer_site == "allsite") {
   plot(st["one"], border="white", col=sf.colors(1, alpha=0), add=TRUE)
   p_o_2020_125 <- recordPlot()
 
-  #2016-2020 older cancer death at RR greater than 1.5
+  #2016-2020 older cancer death at RR>1.5
   plot(rs_o_2020["exc150"], border=NA, main=NA, key.pos=1,
        pal=hcl.colors(10, "Heat", rev=TRUE), reset=FALSE)
   plot(cou["one"], border="darkgray", col="gray", key.pos=NA,
